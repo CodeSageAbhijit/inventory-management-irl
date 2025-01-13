@@ -1,0 +1,30 @@
+{% extends "layout.html" %}
+
+{% block title %}
+Checkout Summary
+{% endblock %}
+
+{% block main %}
+<h2>Checkout Summary</h2>
+
+<table class="table table-bordered table-striped">
+    <thead class="thead-light">
+        <tr>
+            <th>Name</th>
+            <th>Quantity</th>
+            <th>Date & Time</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for log in checkout_logs %}
+        <tr>
+            <td>{{ log.name }}</td>
+            <td>{{ log.quantity }}</td>
+            <td>{{ log.timestamp }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<a href="{{ url_for('cart') }}" class="btn btn-primary mt-3">Back to Cart</a>
+{% endblock %}

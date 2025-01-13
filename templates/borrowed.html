@@ -1,0 +1,57 @@
+{% extends "layout.html" %}
+
+{% block title %}
+Borrowed Items
+{% endblock %}
+
+{% block main %}
+<h2>Borrowed Items</h2>
+
+<table class="table table-bordered table-striped">
+    <thead class="thead-light">
+        <tr>
+            <th>Name</th>
+            <th>Quantity</th>
+            <th>Days Remaining</th>
+
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for item in borrowed_items %}
+        <tr>
+            <td>{{ item.name }}</td>
+            <td>{{ item.quantity }}</td>
+            <td>
+                {% if item.days_remaining > 0 %}
+                {{ item.days_remaining }}
+                {% else %}
+                <span class="text-danger">Overdue</span>
+                {% endif %}
+            </td>
+
+            <td>
+                <!-- Return Form -->
+                <form action="{{ url_for('request_return', item_id=item.item_id) }}" method="POST" class="d-inline">
+                    {% if item.return_status == 'Approved' %}
+                    <button class="btn btn-success btn-sm" disabled>Return Approved</button>
+                    {% elif item.return_status == 'Rejected' %}
+                    <button class="btn btn-danger btn-sm" disabled>Return Rejected</button>
+                    {% elif item.return_status == 'Waiting' %}
+                    <button class="btn btn-info btn-sm" disabled>Return Issued</button>
+                    {% else %}
+                    <button type="submit" class="btn btn-warning btn-sm">Return</button>
+                    {% endif %}
+                </form>
+
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% if not borrowed_items %}
+<p class="text-center mt-3">No borrowed items to display.</p>
+{% endif %}
+
+{% endblock %}

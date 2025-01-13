@@ -1,0 +1,23 @@
+{% extends "layout.html" %}
+
+{% block title %}
+Download
+{% endblock %}
+
+{% block main %}
+<div class="container">
+    <h1 class="mt-5 mb-4">My Files</h1>
+    <div class="list-group">
+        {% if files %}
+            {% for file in files %}
+                <div class="list-group-item d-flex justify-content-between align-items-center">
+                    {{ file }}
+                    <a href="{{ url_for('download_file', filename=file) }}" class="btn btn-primary">Download</a>
+                </div>
+            {% endfor %}
+        {% else %}
+            <p>No files available for download.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

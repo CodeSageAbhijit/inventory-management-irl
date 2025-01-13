@@ -1,0 +1,354 @@
+{% extends "layout.html" %}
+
+{% block title %}
+Inventory
+{% endblock %}
+
+{% block main %}
+<h2>INVENTORY</h2>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+        background-color: #f4f4f9;
+        /* Light gray background */
+    }
+
+    .container {
+        max-width: 1200px;
+        margin: 20px auto;
+        padding: 20px;
+        text-align: center;
+    }
+
+    .inventory-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 20px;
+    }
+
+    .item-card {
+        background-color: #fff;
+        /* White background */
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        padding: 15px;
+        width: 100%;
+        max-width: 250px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        overflow: hidden;
+    }
+
+    .item-card img {
+        width: 100%;
+        height: 150px;
+        object-fit: cover;
+        border-radius: 5px;
+        margin-bottom: 10px;
+    }
+
+    .item-card h3 {
+        font-size: 18px;
+        margin: 10px 0;
+        color: #333;
+    }
+
+    .item-card p {
+        font-size: 14px;
+        color: #666;
+        margin-bottom: 10px;
+    }
+
+    .item-card strong {
+        font-size: 16px;
+        color: #000;
+    }
+
+    .add-to-cart-form {
+        margin-top: 10px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .add-to-cart-form input {
+        width: 60px;
+        padding: 5px;
+        margin-right: 10px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        text-align: center;
+    }
+
+    .add-to-cart-form button {
+        padding: 8px 15px;
+        background-color: #28a745;
+        border: none;
+        color: white;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+
+    .add-to-cart-form button:hover {
+        background-color: #218838;
+    }
+</style>
+
+<!-- QR Code Scan Feature -->
+<!-- <h2>Scan QR</h2> -->
+<div class="container text-center">
+    <button id="scan-button" class="btn btn-primary" onclick="startScanner()">Scan QR</button>
+    <button id="close-button" class="btn btn-danger" onclick="closeScanner()" style="display:none;">Close
+        Scanner</button>
+</div>
+<div id="qr-reader" style="width: 600px; margin: 20px auto; display:none;"></div>
+<div class="container" id="scan-result-container" style="display:none;">
+    <h3>Scan Result:</h3>
+    <p id="scan-result"></p>
+</div>
+
+<!-- Inventory Items -->
+
+<div class="container">
+
+    <div class="inventory-grid">
+        <!-- Dynamic content will be inserted here by JavaScript -->
+    </div>
+</div>
+
+
+
+<!-- <div class="container">
+    {% if items %}
+    <div class="inventory-grid">
+        {% for item in items %}
+        <div class="card">
+
+            <img src="{{ item['image_url'] if item['image_url'] else '/static/images/placeholder.png' }}"
+                alt="{{ item['name'] }}">
+
+            <div class="card-body">
+                <h5 class="card-title">{{ item['name'] }}</h5>
+
+                <p class="card-text">{{ item['description'] if item['description'] else 'No description available.' }}
+                </p>
+
+
+                <p class="card-text">Quantity: {{ item['quantity'] if item['quantity'] else 'Not available' }}</p>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <p>No inventory items available.</p>
+    {% endif %}
+</div> -->
+
+<!-- QR Code Scanner Script -->
+<script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+<script>
+    let html5QrCode;
+
+    function startScanner() {
+        document.getElementById('scan-button').style.display = 'none';
+        document.getElementById('close-button').style.display = 'block';
+        document.getElementById('qr-reader').style.display = 'block';
+
+        html5QrCode = new Html5Qrcode("qr-reader");
+
+        html5QrCode.start(
+            { facingMode: "environment" },
+            { fps: 10, qrbox: 250 },
+            onScanSuccess,
+            onScanFailure
+        ).catch((error) => {
+            console.error(`Error starting QR code scanner: ${error}`);
+            document.getElementById('scan-result').innerText =
+                'Failed to start the scanner. Please check your camera permissions.';
+        });
+    }
+
+    function closeScanner() {
+        html5QrCode.stop();
+        document.getElementById('scan-button').style.display = 'block';
+        document.getElementById('close-button').style.display = 'none';
+        document.getElementById('qr-reader').style.display = 'none';
+    }
+
+    // Track already added item IDs to prevent duplication
+    let addedItemIds = [];
+
+    function onScanSuccess(decodedText, decodedResult) {
+        document.getElementById('scan-result').innerText = `Scanned: ${decodedText}`;
+        document.getElementById('scan-result-container').style.display = 'block';
+
+        let qrCodeBase64 = btoa(decodedText); // Convert the scanned QR code to base64
+
+        // Make the fetch request with proper headers
+        fetch(`/?qr_code=${encodeURIComponent(qrCodeBase64)}`, {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Item not found');
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Received item data:', data);
+                renderItem(data);
+                renderAddToCartButton(); // Render the add to cart button after adding item
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Failed to find item. Please try scanning again.');
+            });
+    }
+
+    function renderItem(item) {
+        if (!item || !item.id) {
+            console.error('Invalid item data received');
+            return;
+        }
+
+        if (addedItemIds.includes(item.id)) {
+            console.log(`Item with ID ${item.id} already exists.`);
+            return;
+        }
+
+        console.log(`Adding item with ID: ${item.id}`);
+
+        const inventoryGrid = document.querySelector('.inventory-grid');
+        const card = document.createElement('div');
+        card.classList.add('item-card');
+
+        card.innerHTML = `
+        <img src="${item.image_url || '/static/images/placeholder.png'}" alt="${item.name}">
+        <div class="card-body">
+            <h3 class="card-title">${item.name}</h3>
+            <p class="card-text">${item.description || 'No description available.'}</p>
+            <p class="card-text">Quantity: ${item.quantity || 'Not available'}</p>
+        </div>
+    `;
+
+        inventoryGrid.appendChild(card);
+        addedItemIds.push(item.id);
+        console.log('Current addedItemIds:', addedItemIds);
+    }
+
+    function renderAddToCartButton() {
+    if (addedItemIds.length === 0) {
+        console.log('No items to add to cart');
+        return;
+    }
+
+    console.log('Rendering Add to Cart button with items:', addedItemIds);
+
+    const inventoryGrid = document.querySelector('.inventory-grid');
+
+    // Remove existing button if it exists
+    const existingContainer = document.querySelector('.add-to-cart-container');
+    if (existingContainer) {
+        existingContainer.remove();
+    }
+
+    const formHTML = `
+        <div class="add-to-cart-container mt-4 text-center">
+            <form id="addToCartForm" method="POST" action="/add_to_cart">
+                ${addedItemIds.map(id => `
+                    <input type="hidden" name="item_ids[]" value="${id}">
+                `).join('')}
+                <button type="submit" class="btn btn-success btn-lg">
+                    <i class="fas fa-shopping-cart"></i> Add to Cart
+                </button>
+            </form>
+        </div>
+    `;
+
+    inventoryGrid.insertAdjacentHTML('beforeend', formHTML);
+
+    // Add submit event listener
+    document.getElementById('addToCartForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        const formData = new FormData(this);
+        console.log('Submitting form with data:');
+        for (let pair of formData.entries()) {
+            console.log(pair[0], pair[1]);
+        }
+
+        // Disable the submit button and show loading state
+        const submitButton = this.querySelector('button[type="submit"]');
+        const originalText = submitButton.innerHTML;
+        submitButton.disabled = true;
+        submitButton.innerHTML = `
+            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+            Adding to cart...
+        `;
+
+        fetch('/add_to_cart', {
+            method: 'POST',
+            body: formData,
+            credentials: 'same-origin'
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Failed to add items to cart');
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('Success:', data);
+
+            // Show success alert using Bootstrap alert
+            const alertHTML = `
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    Items added to cart successfully!
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            `;
+            inventoryGrid.insertAdjacentHTML('beforebegin', alertHTML);
+
+            // Reset button state
+            submitButton.disabled = false;
+            submitButton.innerHTML = originalText;
+
+            // Clear items and refresh after a short delay
+            setTimeout(() => {
+                addedItemIds = [];
+                location.reload();
+            }, 1500);
+        })
+        .catch(error => {
+            console.error('Error:', error);
+
+            // Show error alert using Bootstrap alert
+            const alertHTML = `
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    Failed to add items to cart. Please try again.
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            `;
+            inventoryGrid.insertAdjacentHTML('beforebegin', alertHTML);
+
+            // Reset button state
+            submitButton.disabled = false;
+            submitButton.innerHTML = originalText;
+        });
+    });
+}
+
+
+
+
+
+    function onScanFailure(error) { }
+</script>
+{% endblock %}

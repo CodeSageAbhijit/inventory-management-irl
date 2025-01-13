@@ -1,0 +1,67 @@
+{% extends "layout.html" %}
+
+{% block title %}
+Cart
+{% endblock %}
+
+{% block main %}
+<h2>Your Cart</h2>
+
+<table class="table table-bordered table-striped">
+    <thead class="thead-light">
+        <tr>
+            <th>Name</th>
+            <th>Update Quantity</th>
+            <th>Duration (Days)</th>
+            <th>Delete</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for item in cart_items %}
+        <tr>
+            <td>{{ item.name }}</td>
+            <td>
+                <!-- Form for updating quantity -->
+                <form action="{{ url_for('update_cart_quantity') }}" method="POST" class="d-inline">
+                    <input type="hidden" name="item_id" value="{{ item.item_id }}">
+                    <div class="d-flex align-items-center">
+                        <input type="number" name="quantity_{{ item.item_id }}"
+                               value="{{ item.quantity }}" min="1" max="{{ item.stock_quantity }}"
+                               class="form-control d-inline w-auto" style="width: 80px; margin-right: 10px;">
+                        <button type="submit" class="btn btn-primary btn-sm">Update Quantity</button>
+                    </div>
+                </form>
+            </td>
+            <td>
+                <!-- Form for updating duration -->
+                <form action="{{ url_for('update_cart_duration') }}" method="POST" class="d-inline">
+                    <input type="hidden" name="item_id" value="{{ item.item_id }}">
+                    <div class="d-flex align-items-center">
+                        <input type="number" name="duration_{{ item.item_id }}" class="form-control"
+                               value="{{ item.duration if item.duration is not none else 0 }}" min="0" required
+                               style="width: 80px; margin-right: 10px; margin-left: 10px;">
+                        <button type="submit" class="btn btn-primary btn-sm">Update Duration</button>
+                    </div>
+                </form>
+            </td>
+            <td>
+                <!-- Form for Deleting Quantity -->
+                <form action="{{ url_for('remove_from_cart', item_id=item.item_id) }}" method="POST" class="d-inline">
+                    <input type="number" name="quantity" min="1" max="{{ item.quantity }}" value="1" class="form-control d-inline w-auto" style="width: 80px;">
+                    <button type="submit" class="btn btn-danger btn-sm ml-2">Delete</button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<!-- Add Total Quantity and Request Item Button -->
+<div class="mt-3">
+    <h5>Total Quantity: {{ total_quantity }}</h5>
+    <form action="{{ url_for('request_items') }}" method="POST">
+        <button type="submit" class="btn btn-success btn-lg btn-block" style="margin-top: 20px;">Request Items</button>
+    </form>
+</div>
+
+{% endblock %}

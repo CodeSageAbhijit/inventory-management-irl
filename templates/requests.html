@@ -1,0 +1,30 @@
+<h2>Admin - Pending Requests</h2>
+<table class="table table-bordered table-striped">
+    <thead>
+        <tr>
+            <th>User</th>
+            <th>Item</th>
+            <th>Quantity</th>
+            <th>Date</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for request in requests %}
+        <tr>
+            <td>{{ request.username }}</td>
+            <td>{{ request.name }}</td>
+            <td>{{ request.quantity }}</td>
+            <td>{{ request.timestamp }}</td>
+            <td>
+                <form action="{{ url_for('approve_request', request_id=request.id) }}" method="POST" class="d-inline">
+                    <button type="submit" class="btn btn-success btn-sm">Approve</button>
+                </form>
+                <form action="{{ url_for('reject_request', request_id=request.id) }}" method="POST" class="d-inline">
+                    <button type="submit" class="btn btn-danger btn-sm">Reject</button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>

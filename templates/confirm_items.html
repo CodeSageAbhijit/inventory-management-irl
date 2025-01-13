@@ -1,0 +1,40 @@
+{% extends "layout.html" %}
+{% block main %}
+<h2>Confirm Your Approved Requests</h2>
+
+{% if requests %}
+<form action="{{ url_for('confirm_selected_items') }}" method="POST">
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Request ID</th>
+                <th>Item Name</th>
+                <th>Requested Quantity</th>
+                <th>Duration (Days)</th>
+                <th>Confirm</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for request in requests %}
+            <tr>
+                <td>{{ request.id }}</td>
+                <td>{{ request.item_name }}</td>
+                <td>{{ request.quantity }}</td>
+                <td>
+                    <!-- Display the pre-defined duration as plain text -->
+                    <span>{{ request.duration }}</span>
+                    <input type="hidden" name="duration_{{ request.id }}" value="{{ request.duration }}">
+                </td>
+                <td>
+                    <input type="checkbox" name="confirm_ids[]" value="{{ request.id }}">
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <button type="submit" class="btn btn-primary">Confirm Selected</button>
+</form>
+{% else %}
+<p>No approved requests available for confirmation.</p>
+{% endif %}
+{% endblock %}

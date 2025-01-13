@@ -1,0 +1,75 @@
+{% extends "layout.html" %}
+
+{% block main %}
+    <div class="container mt-4">
+        <h2>History of Borrowed Items</h2>
+
+        <!-- Filter Form -->
+        <form method="GET" action="{{ url_for('view_history') }}" class="mb-4">
+            <div class="row">
+                <div class="col-md-3">
+                    <label for="user_id">User ID:</label>
+                    <input type="text" name="user_id" id="user_id" class="form-control"
+                           value="{{ request.args.get('user_id', '') }}">
+                </div>
+                <div class="col-md-3">
+                    <label for="username">Username:</label>
+                    <input type="text" name="username" id="username" class="form-control"
+                           value="{{ request.args.get('username', '') }}">
+                </div>
+                <div class="col-md-3">
+                    <label for="item_name">Item Name:</label>
+                    <input type="text" name="item_name" id="item_name" class="form-control"
+                           value="{{ request.args.get('item_name', '') }}">
+                </div>
+                <div class="col-md-3">
+                    <label for="start_date">Start Date:</label>
+                    <input type="date" name="start_date" id="start_date" class="form-control"
+                           value="{{ request.args.get('start_date', '') }}">
+                </div>
+                <div class="col-md-3">
+                    <label for="end_date">End Date:</label>
+                    <input type="date" name="end_date" id="end_date" class="form-control"
+                           value="{{ request.args.get('end_date', '') }}">
+                </div>
+                <div class="col-md-3 d-flex align-items-end">
+                    <button type="submit" class="btn btn-primary">Filter</button>
+                </div>
+            </div>
+        </form>
+
+        <!-- History Table -->
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>User ID</th>
+                    <th>Username</th>
+                    <th>Item Name</th>
+                    <th>Date</th>
+                    <th>Duration (days)</th>
+                    <th>Borrowed</th>
+                    <th>Returned</th>
+                    <th>Return Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for record in history %}
+                    <tr>
+                        <td>{{ record.user_id }}</td>
+                        <td>{{ record.username }}</td>
+                        <td>{{ record.item_name }}</td>
+                        <td>{{ record.timestamp }}</td>
+                        <td>{{ record.duration }}</td>
+                        <td>{{ 'Yes' if record.borrowed else 'No' }}</td>
+                        <td>{{ 'Yes' if record.returned else 'No' }}</td>
+                        <td>{{ record.return_status }}</td>
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="8" class="text-center">No records found</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endblock %}
